@@ -17,7 +17,7 @@ describe('Resource Factory', () => {
         name: 'users',
       };
       const tree = await runner
-        .runSchematicAsync('resource', options)
+        .runSchematicAsync('prisma-resource', options)
         .toPromise();
       const files = tree.files;
       expect(files).toEqual([
@@ -36,7 +36,7 @@ describe('Resource Factory', () => {
         name: '_users',
       };
       const tree = await runner
-        .runSchematicAsync('resource', options)
+        .runSchematicAsync('prisma-resource', options)
         .toPromise();
       const files = tree.files;
       expect(files).toEqual([
@@ -57,7 +57,7 @@ describe('Resource Factory', () => {
           crud: false,
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -77,7 +77,7 @@ describe('Resource Factory', () => {
           crud: false,
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -98,43 +98,42 @@ describe('Resource Factory', () => {
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersController" class', () => {
       expect(tree.readContent('/users/users.controller.ts'))
         .toEqual(`import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { User, Prisma } from '@prisma/client';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() data: Prisma.UserCreateInput): Promise<User> {
+    return this.usersService.create(data);
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async findAll(@Query() query: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.usersService.findAll(query);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  async findById(@Param('id') id: string): Promise<User | null> {
+    return this.usersService.findOne({ id: +id });
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  async update(@Param('id') id: string, @Body() data: Prisma.UserUpdateInput) {
+    return this.usersService.update({ id: +id }, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return this.usersService.remove({ id: +id });
   }
 }
 `);
@@ -143,29 +142,36 @@ export class UsersController {
     it('should generate "UsersService" class', () => {
       expect(tree.readContent('/users/users.service.ts'))
         .toEqual(`import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaService } from '../prisma.service';
+import { User, Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private prisma: PrismaService) {}
+
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    return this.prisma.user.create({ data });
   }
 
-  findAll() {
-    return \`This action returns all users\`;
+  async findOne(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
+    return this.prisma.user.findUnique({ where });
   }
 
-  findOne(id: number) {
-    return \`This action returns a #\${id} user\`;
+  async findAll(params: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.prisma.user.findMany(params);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return \`This action updates a #\${id} user\`;
+  async update(
+    where: Prisma.UserWhereUniqueInput,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> {
+    return this.prisma.user.update({ where, data });
   }
 
-  remove(id: number) {
-    return \`This action removes a #\${id} user\`;
+  async remove(where: Prisma.UserWhereUniqueInput): Promise<User> {
+    return this.prisma.user.delete({
+      where,
+    });
   }
 }
 `);
@@ -266,7 +272,7 @@ describe('UsersService', () => {
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersController" class', () => {
@@ -324,7 +330,7 @@ export class UsersModule {}
         type: 'microservice',
       };
       const tree = await runner
-        .runSchematicAsync('resource', options)
+        .runSchematicAsync('prisma-resource', options)
         .toPromise();
       const files = tree.files;
       expect(files).toEqual([
@@ -346,7 +352,7 @@ export class UsersModule {}
           type: 'microservice',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -367,7 +373,7 @@ export class UsersModule {}
           type: 'microservice',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -388,7 +394,7 @@ export class UsersModule {}
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersController" class', () => {
@@ -396,36 +402,35 @@ export class UsersModule {}
         .toEqual(`import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { User, Prisma } from '@prisma/client';
 
 @Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @MessagePattern('createUser')
-  create(@Payload() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Payload() data: Prisma.UserCreateInput): Promise<User> {
+    return this.usersService.create(data);
   }
 
   @MessagePattern('findAllUsers')
-  findAll() {
-    return this.usersService.findAll();
+  async findAll(@Payload() query: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.usersService.findAll(query);
   }
 
-  @MessagePattern('findOneUser')
-  findOne(@Payload() id: number) {
-    return this.usersService.findOne(id);
+  @MessagePattern('findUserById')
+  async findById(@Payload() id: number): Promise<User | null> {
+    return this.usersService.findOne({ id });
   }
 
   @MessagePattern('updateUser')
-  update(@Payload() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(updateUserDto.id, updateUserDto);
+  async update(@Payload() id: number, @Payload() data: Prisma.UserUpdateInput): Promise<User> {
+    return this.usersService.update({ id }, data);
   }
 
   @MessagePattern('removeUser')
-  remove(@Payload() id: number) {
-    return this.usersService.remove(id);
+  async remove(@Payload() id: number): Promise<User> {
+    return this.usersService.remove({ id });
   }
 }
 `);
@@ -434,29 +439,36 @@ export class UsersController {
     it('should generate "UsersService" class', () => {
       expect(tree.readContent('/users/users.service.ts'))
         .toEqual(`import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaService } from '../prisma.service';
+import { User, Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private prisma: PrismaService) {}
+
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    return this.prisma.user.create({ data });
   }
 
-  findAll() {
-    return \`This action returns all users\`;
+  async findOne(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
+    return this.prisma.user.findUnique({ where });
   }
 
-  findOne(id: number) {
-    return \`This action returns a #\${id} user\`;
+  async findAll(params: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.prisma.user.findMany(params);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return \`This action updates a #\${id} user\`;
+  async update(
+    where: Prisma.UserWhereUniqueInput,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> {
+    return this.prisma.user.update({ where, data });
   }
 
-  remove(id: number) {
-    return \`This action removes a #\${id} user\`;
+  async remove(where: Prisma.UserWhereUniqueInput): Promise<User> {
+    return this.prisma.user.delete({
+      where,
+    });
   }
 }
 `);
@@ -560,7 +572,7 @@ describe('UsersService', () => {
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersController" class', () => {
@@ -618,7 +630,7 @@ export class UsersModule {}
         type: 'ws',
       };
       const tree = await runner
-        .runSchematicAsync('resource', options)
+        .runSchematicAsync('prisma-resource', options)
         .toPromise();
       const files = tree.files;
       expect(files).toEqual([
@@ -640,7 +652,7 @@ export class UsersModule {}
           type: 'ws',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -661,7 +673,7 @@ export class UsersModule {}
           type: 'ws',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -683,43 +695,42 @@ export class UsersModule {}
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersGateway" class', () => {
       expect(tree.readContent('/users/users.gateway.ts'))
         .toEqual(`import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { User, Prisma } from '@prisma/client';
 
 @WebSocketGateway()
 export class UsersGateway {
   constructor(private readonly usersService: UsersService) {}
 
   @SubscribeMessage('createUser')
-  create(@MessageBody() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@MessageBody() data: Prisma.UserCreateInput): Promise<User> {
+    return this.usersService.create(data);
   }
 
   @SubscribeMessage('findAllUsers')
-  findAll() {
-    return this.usersService.findAll();
+  async findAll(@MessageBody() query: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.usersService.findAll(query);
   }
 
-  @SubscribeMessage('findOneUser')
-  findOne(@MessageBody() id: number) {
-    return this.usersService.findOne(id);
+  @SubscribeMessage('findUserById')
+  async findById(@MessageBody() id: number): Promise<User | null> {
+    return this.usersService.findOne({ id });
   }
 
   @SubscribeMessage('updateUser')
-  update(@MessageBody() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(updateUserDto.id, updateUserDto);
+  async update(@MessageBody() id: number, @MessageBody() data: Prisma.UserUpdateInput): Promise<User> {
+    return this.usersService.update({ id }, data);
   }
 
   @SubscribeMessage('removeUser')
-  remove(@MessageBody() id: number) {
-    return this.usersService.remove(id);
+  async remove(@MessageBody() id: number): Promise<User> {
+    return this.usersService.remove({ id });
   }
 }
 `);
@@ -727,29 +738,36 @@ export class UsersGateway {
     it('should generate "UsersService" class', () => {
       expect(tree.readContent('/users/users.service.ts'))
         .toEqual(`import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaService } from '../prisma.service';
+import { User, Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private prisma: PrismaService) {}
+
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    return this.prisma.user.create({ data });
   }
 
-  findAll() {
-    return \`This action returns all users\`;
+  async findOne(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
+    return this.prisma.user.findUnique({ where });
   }
 
-  findOne(id: number) {
-    return \`This action returns a #\${id} user\`;
+  async findAll(params: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.prisma.user.findMany(params);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return \`This action updates a #\${id} user\`;
+  async update(
+    where: Prisma.UserWhereUniqueInput,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> {
+    return this.prisma.user.update({ where, data });
   }
 
-  remove(id: number) {
-    return \`This action removes a #\${id} user\`;
+  async remove(where: Prisma.UserWhereUniqueInput): Promise<User> {
+    return this.prisma.user.delete({
+      where,
+    });
   }
 }
 `);
@@ -851,7 +869,7 @@ describe('UsersService', () => {
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersGateway" class', () => {
@@ -908,7 +926,7 @@ export class UsersModule {}
         type: 'graphql-code-first',
       };
       const tree = await runner
-        .runSchematicAsync('resource', options)
+        .runSchematicAsync('prisma-resource', options)
         .toPromise();
       const files = tree.files;
       expect(files).toEqual([
@@ -930,7 +948,7 @@ export class UsersModule {}
           type: 'graphql-code-first',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -951,7 +969,7 @@ export class UsersModule {}
           type: 'graphql-code-first',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -972,44 +990,42 @@ export class UsersModule {}
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersResolver" class', () => {
       expect(tree.readContent('/users/users.resolver.ts'))
         .toEqual(`import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { CreateUserInput } from './dto/create-user.input';
-import { UpdateUserInput } from './dto/update-user.input';
+import { User, Prisma } from '@prisma/client';
 
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
   @Mutation(() => User)
-  createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
-    return this.usersService.create(createUserInput);
+  async createUser(@Args('data') data: Prisma.UserCreateInput): Promise<User> {
+    return this.usersService.create(data);
   }
 
   @Query(() => [User], { name: 'users' })
-  findAll() {
-    return this.usersService.findAll();
+  async findAll(@Args('query') query: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.usersService.findAll(query);
   }
 
   @Query(() => User, { name: 'user' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.usersService.findOne(id);
+  async findById(@Args('id', { type: () => Int }) id: number): Promise<User | null> {
+    return this.usersService.findOne({ id });
   }
 
   @Mutation(() => User)
-  updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return this.usersService.update(updateUserInput.id, updateUserInput);
+  async updateUser(@Args('id', { type: () => Int }) id: number, @Args('data') data: Prisma.UserUpdateInput): Promise<User> {
+    return this.usersService.update({ id }, data);
   }
 
   @Mutation(() => User)
-  removeUser(@Args('id', { type: () => Int }) id: number) {
-    return this.usersService.remove(id);
+  async removeUser(@Args('id', { type: () => Int }) id: number): Promise<User> {
+    return this.usersService.remove({ id });
   }
 }
 `);
@@ -1017,29 +1033,36 @@ export class UsersResolver {
     it('should generate "UsersService" class', () => {
       expect(tree.readContent('/users/users.service.ts'))
         .toEqual(`import { Injectable } from '@nestjs/common';
-import { CreateUserInput } from './dto/create-user.input';
-import { UpdateUserInput } from './dto/update-user.input';
+import { PrismaService } from '../prisma.service';
+import { User, Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  create(createUserInput: CreateUserInput) {
-    return 'This action adds a new user';
+  constructor(private prisma: PrismaService) {}
+
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    return this.prisma.user.create({ data });
   }
 
-  findAll() {
-    return \`This action returns all users\`;
+  async findOne(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
+    return this.prisma.user.findUnique({ where });
   }
 
-  findOne(id: number) {
-    return \`This action returns a #\${id} user\`;
+  async findAll(params: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.prisma.user.findMany(params);
   }
 
-  update(id: number, updateUserInput: UpdateUserInput) {
-    return \`This action updates a #\${id} user\`;
+  async update(
+    where: Prisma.UserWhereUniqueInput,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> {
+    return this.prisma.user.update({ where, data });
   }
 
-  remove(id: number) {
-    return \`This action removes a #\${id} user\`;
+  async remove(where: Prisma.UserWhereUniqueInput): Promise<User> {
+    return this.prisma.user.delete({
+      where,
+    });
   }
 }
 `);
@@ -1151,7 +1174,7 @@ describe('UsersService', () => {
         type: 'graphql-schema-first',
       };
       const tree = await runner
-        .runSchematicAsync('resource', options)
+        .runSchematicAsync('prisma-resource', options)
         .toPromise();
       const files = tree.files;
       expect(files).toEqual([
@@ -1174,7 +1197,7 @@ describe('UsersService', () => {
           type: 'graphql-schema-first',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -1195,7 +1218,7 @@ describe('UsersService', () => {
           type: 'graphql-schema-first',
         };
         const tree = await runner
-          .runSchematicAsync('resource', options)
+          .runSchematicAsync('prisma-resource', options)
           .toPromise();
         const files = tree.files;
         expect(files).toEqual([
@@ -1215,43 +1238,41 @@ describe('UsersService', () => {
     let tree: UnitTestTree;
 
     beforeAll(async () => {
-      tree = await runner.runSchematicAsync('resource', options).toPromise();
+      tree = await runner.runSchematicAsync('prisma-resource', options).toPromise();
     });
 
     it('should generate "UsersResolver" class', () => {
       expect(tree.readContent('/users/users.resolver.ts'))
         .toEqual(`import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { UsersService } from './users.service';
-import { CreateUserInput } from './dto/create-user.input';
-import { UpdateUserInput } from './dto/update-user.input';
 
 @Resolver('User')
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
   @Mutation('createUser')
-  create(@Args('createUserInput') createUserInput: CreateUserInput) {
-    return this.usersService.create(createUserInput);
+  async create(@Args('data') data: Prisma.UserCreateInput) {
+    return this.usersService.create(data);
   }
 
   @Query('users')
-  findAll() {
-    return this.usersService.findAll();
+  async findAll(@Args('query') query: Prisma.UserFindManyArgs) {
+    return this.usersService.findAll(query);
   }
 
-  @Query('user')
-  findOne(@Args('id') id: number) {
-    return this.usersService.findOne(id);
+  @Query('userById')
+  async findById(@Args('id', { type: () => Int }) id: number) {
+    return this.usersService.findOne({ id });
   }
 
   @Mutation('updateUser')
-  update(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return this.usersService.update(updateUserInput.id, updateUserInput);
+  async update(@Args('id', { type: () => Int }) id: number, @Args('data') data: Prisma.UserUpdateInput) {
+    return this.usersService.update({ id }, data);
   }
 
   @Mutation('removeUser')
-  remove(@Args('id') id: number) {
-    return this.usersService.remove(id);
+  async remove(@Args('id', { type: () => Int }) id: number) {
+    return this.usersService.remove({ id });
   }
 }
 `);
@@ -1259,29 +1280,36 @@ export class UsersResolver {
     it('should generate "UsersService" class', () => {
       expect(tree.readContent('/users/users.service.ts'))
         .toEqual(`import { Injectable } from '@nestjs/common';
-import { CreateUserInput } from './dto/create-user.input';
-import { UpdateUserInput } from './dto/update-user.input';
+import { PrismaService } from '../prisma.service';
+import { User, Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  create(createUserInput: CreateUserInput) {
-    return 'This action adds a new user';
+  constructor(private prisma: PrismaService) {}
+
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    return this.prisma.user.create({ data });
   }
 
-  findAll() {
-    return \`This action returns all users\`;
+  async findOne(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
+    return this.prisma.user.findUnique({ where });
   }
 
-  findOne(id: number) {
-    return \`This action returns a #\${id} user\`;
+  async findAll(params: Prisma.UserFindManyArgs): Promise<User[]> {
+    return this.prisma.user.findMany(params);
   }
 
-  update(id: number, updateUserInput: UpdateUserInput) {
-    return \`This action updates a #\${id} user\`;
+  async update(
+    where: Prisma.UserWhereUniqueInput,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> {
+    return this.prisma.user.update({ where, data });
   }
 
-  remove(id: number) {
-    return \`This action removes a #\${id} user\`;
+  async remove(where: Prisma.UserWhereUniqueInput): Promise<User> {
+    return this.prisma.user.delete({
+      where,
+    });
   }
 }
 `);
@@ -1406,7 +1434,7 @@ type Mutation {
       flat: true,
     };
     const tree: UnitTestTree = await runner
-      .runSchematicAsync('resource', options)
+      .runSchematicAsync('prisma-resource', options)
       .toPromise();
     const files: string[] = tree.files;
 
@@ -1425,7 +1453,7 @@ type Mutation {
       flat: true,
     };
     const tree: UnitTestTree = await runner
-      .runSchematicAsync('resource', options)
+      .runSchematicAsync('prisma-resource', options)
       .toPromise();
     const files: string[] = tree.files;
 

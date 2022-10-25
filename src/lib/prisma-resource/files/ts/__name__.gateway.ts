@@ -1,34 +1,33 @@
 import { WebSocketGateway<% if (crud) { %>, SubscribeMessage, MessageBody<% } %> } from '@nestjs/websockets';
 import { <%= classify(name) %>Service } from './<%= name %>.service';<% if (crud) { %>
-import { Create<%= singular(classify(name)) %>Dto } from './dto/create-<%= singular(name) %>.dto';
-import { Update<%= singular(classify(name)) %>Dto } from './dto/update-<%= singular(name) %>.dto';<% } %>
+import { <%= singular(classify(name)) %>, Prisma } from '@prisma/client';<% } %>
 
 @WebSocketGateway()
 export class <%= classify(name) %>Gateway {
   constructor(private readonly <%= lowercased(name) %>Service: <%= classify(name) %>Service) {}<% if (crud) { %>
 
   @SubscribeMessage('create<%= singular(classify(name)) %>')
-  create(@MessageBody() create<%= singular(classify(name)) %>Dto: Create<%= singular(classify(name)) %>Dto) {
-    return this.<%= lowercased(name) %>Service.create(create<%= singular(classify(name)) %>Dto);
+  async create(@MessageBody() data: Prisma.<%= singular(classify(name)) %>CreateInput): Promise<<%= singular(classify(name)) %>> {
+    return this.<%= lowercased(name) %>Service.create(data);
   }
 
   @SubscribeMessage('findAll<%= classify(name) %>')
-  findAll() {
-    return this.<%= lowercased(name) %>Service.findAll();
+  async findAll(@MessageBody() query: Prisma.<%= singular(classify(name)) %>FindManyArgs): Promise<<%= singular(classify(name)) %>[]> {
+    return this.<%= lowercased(name) %>Service.findAll(query);
   }
 
-  @SubscribeMessage('findOne<%= singular(classify(name)) %>')
-  findOne(@MessageBody() id: number) {
-    return this.<%= lowercased(name) %>Service.findOne(id);
+  @SubscribeMessage('find<%= singular(classify(name)) %>ById')
+  async findById(@MessageBody() id: number): Promise<<%= singular(classify(name)) %> | null> {
+    return this.<%= lowercased(name) %>Service.findOne({ id });
   }
 
   @SubscribeMessage('update<%= singular(classify(name)) %>')
-  update(@MessageBody() update<%= singular(classify(name)) %>Dto: Update<%= singular(classify(name)) %>Dto) {
-    return this.<%= lowercased(name) %>Service.update(update<%= singular(classify(name)) %>Dto.id, update<%= singular(classify(name)) %>Dto);
+  async update(@MessageBody() id: number, @MessageBody() data: Prisma.<%= singular(classify(name)) %>UpdateInput): Promise<<%= singular(classify(name)) %>> {
+    return this.<%= lowercased(name) %>Service.update({ id }, data);
   }
 
   @SubscribeMessage('remove<%= singular(classify(name)) %>')
-  remove(@MessageBody() id: number) {
-    return this.<%= lowercased(name) %>Service.remove(id);
+  async remove(@MessageBody() id: number): Promise<<%= singular(classify(name)) %>> {
+    return this.<%= lowercased(name) %>Service.remove({ id });
   }<% } %>
 }

@@ -19,12 +19,12 @@ export class <%= classify(name) %>Controller {
   async findAll(@Query() query: Prisma.<%= singular(classify(name)) %>FindManyArgs): Promise<<%= singular(classify(name)) %>[]> {
     return this.<%= lowercased(name) %>Service.findAll(query);
   }
-  
+
   @Get(':id')
   async findById(@Param('id') id: string): Promise<<%= singular(classify(name)) %> | null> {
     return this.<%= lowercased(name) %>Service.findOne({ id: +id });
   }
-  
+
   @Patch(':id')
   async update(@Param('id') id: string, @Body() data: Prisma.<%= singular(classify(name)) %>UpdateInput) {
     return this.<%= lowercased(name) %>Service.update({ id: +id }, data);
@@ -34,30 +34,29 @@ export class <%= classify(name) %>Controller {
   async remove(@Param('id') id: string) {
     return this.<%= lowercased(name) %>Service.remove({ id: +id });
   }<% } else if (type === 'microservice' && crud) { %>
-  
 
   @MessagePattern('create<%= singular(classify(name)) %>')
-  async create(@Body() data: Prisma.<%= singular(classify(name)) %>CreateInput) {
+  async create(@Payload() data: Prisma.<%= singular(classify(name)) %>CreateInput): Promise<<%= singular(classify(name)) %>> {
     return this.<%= lowercased(name) %>Service.create(data);
   }
 
   @MessagePattern('findAll<%= classify(name) %>')
-  async findAll(@Query() query: Prisma.<%= singular(classify(name)) %>FindManyArgs): Promise<<%= singular(classify(name)) %>[]> {
+  async findAll(@Payload() query: Prisma.<%= singular(classify(name)) %>FindManyArgs): Promise<<%= singular(classify(name)) %>[]> {
     return this.<%= lowercased(name) %>Service.findAll(query);
   }
 
-  @MessagePattern('findById<%= singular(classify(name)) %>')
-  async findById(@Param('id') id: string): Promise<<%= singular(classify(name)) %> | null> {
-    return this.<%= lowercased(name) %>Service.findOne({ id: +id });
+  @MessagePattern('find<%= singular(classify(name)) %>ById')
+  async findById(@Payload() id: number): Promise<<%= singular(classify(name)) %> | null> {
+    return this.<%= lowercased(name) %>Service.findOne({ id });
   }
 
   @MessagePattern('update<%= singular(classify(name)) %>')
-  async update(@Param('id') id: string, @Body() data: Prisma.<%= singular(classify(name)) %>UpdateInput) {
-    return this.<%= lowercased(name) %>Service.update({ id: +id }, data);
+  async update(@Payload() id: number, @Payload() data: Prisma.<%= singular(classify(name)) %>UpdateInput): Promise<<%= singular(classify(name)) %>> {
+    return this.<%= lowercased(name) %>Service.update({ id }, data);
   }
 
   @MessagePattern('remove<%= singular(classify(name)) %>')
-  async remove(@Param('id') id: string) {
-    return this.<%= lowercased(name) %>Service.remove({ id: +id });
+  async remove(@Payload() id: number): Promise<<%= singular(classify(name)) %>> {
+    return this.<%= lowercased(name) %>Service.remove({ id });
   }<% } %>
 }
