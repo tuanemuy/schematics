@@ -113,9 +113,9 @@
       "aliases": ["app"]
     },
     "resource": {
-      "factory": "./lib/resource/resource.factory#main",
-      "description": "Create a Nest resource.",
-      "schema": "./lib/resource/schema.json",
+      "factory": "./lib/prisma-resource/resource.factory#main",
+      "description": "Create a Nest resource with Prisma.",
+      "schema": "./lib/prisma-resource/schema.json",
       "aliases": ["res"]
     }
   }
