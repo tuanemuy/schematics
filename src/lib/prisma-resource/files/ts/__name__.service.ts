@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';<% if (crud) { %>
 import { PrismaService } from '../prisma.service';
-import { <%= singular(classify(name)) %>, Prisma } from '@prisma/client';
+import { <%= singular(classify(name)) %>, Prisma } from '@prisma/client';<% } %>
 
 @Injectable()
 export class <%= classify(name) %>Service {<% if (crud) { %>
@@ -14,7 +14,7 @@ export class <%= classify(name) %>Service {<% if (crud) { %>
     return this.prisma.<%= lowercased(singular(name)) %>.findUnique({ where });
   }
 
-  async findAll(params: Prisma.<%= singular(classify(name))FindManyArgs): Promise<<%= singular(classify(name)) %>[]> {
+  async findAll(params: Prisma.<%= singular(classify(name)) %>FindManyArgs): Promise<<%= singular(classify(name)) %>[]> {
     return this.prisma.<%= lowercased(singular(name)) %>.findMany(params);
   }
 
